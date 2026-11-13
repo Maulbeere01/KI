@@ -48,10 +48,39 @@ def bfs(G, start, dest):
 
     return None, expanded
 
-if __name__ == "__main__":
-    G = osmnx.load_graphml("data/hamburg.graphml")
+def bi_dir_bfs(G, start, dest):
+    q_start = deque([start])
+    q_dest = deque([dest])
+    visited_start = {start}
+    visited_dest = {dest}
+    parent_start  = {}
+    parent_dest = {}
+    expanded = []
 
-    start = osmnx.distance.nearest_nodes(G, START[1], START[0])
-    destination = osmnx.distance.nearest_nodes(G, DEST[1], DEST[0])
+    while q_start and q_dest:
+        hit = expand_level(G.successors, q_start, parent_start, visited_start, visited_dest, expanded)
+        if hit is None:
+            hit = expand_level(G.predecessors, q_dest, parent_dest, visited_dest, visited_start, expanded)
+        if hit is not None:
+            first = construct_path(parent_start, start, hit)
+            second = construct_path(parent_dest, dest, hit)
+            second.reverse()
+            return first + second[1:], expanded
+    return None, expanded
+            
+def expand_level(neighbours, q, parent, visited_own, visited_other, expanded):
+    level_size = len(q)
+    for _ in range(level_size):
+        node = q.popleft()
+        expanded.append(node)
 
-    path, expanded = bfs(G, start, destination)
+        for n in neighbours(node):
+            if n in visited_other:
+                parent[n] = node
+                return n
+            if n not in visited_own:
+                visited_own.add(n)
+                q.append(n)
+                parent[n] = node
+    return None
+
