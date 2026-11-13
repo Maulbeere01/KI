@@ -3,6 +3,19 @@ KIP-1
 # Idee
 Routenplaner durch Hamburg 
 
+# Verteilung
+- BFS, Bidirektional -> Ben
+- Dijkstra, A* -> Raffael
+
+# Tagebuch
+- Idee
+- Ablauf: Setup, erste Suche
+- wie Graph von OSM modelliert ist (gerichtet)
+- genutzte Techniken (KI für visualize.py)
+- warum Werte so gewählt (Zentrum der Karte, Radius)
+- genutzte Algos
+- Vergleich der Ergebnisse
+
 # Algorithmen
 - Breitensuche, Dijkstra, A* und bidirekt. 
 
@@ -78,6 +91,7 @@ Routenplaner durch Hamburg
 
 # Demo
 - Karte, auf der eingefärbt wird, welche Knoten jedes Verfahren besucht (Dijkstra breitet sich kreisförmig aus, A* läuft Richtung Ziel) 
+- in Diagramm Laufzeit, usw. visualisieren
 
 # Code
 ## Setup per:
