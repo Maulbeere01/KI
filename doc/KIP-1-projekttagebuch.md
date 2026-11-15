@@ -29,6 +29,7 @@ Ziel des Projekts ist ein Routenplaner, der auf dem realen Hamburger Straßennet
 Neben dem reinen Finden eines Weges steht der Vergleich der Verfahren im Vordergrund: 
 - Wie viele Knoten muss ein Algorithmus untersuchen?
 - Wie lange dauert die Suche?
+- Wie lange ist der gefundene Weg in Kilometer und in Knoten?
 - Welchen Einfluss hat eine Heuristik? 
 
 Die Ergebnisse werden als Animation auf der Karte in Form eines Gif dargestellt.
@@ -92,7 +93,7 @@ Das Straßennetz wird mit osmnx über `graph_from_point` geladen und als `MultiD
 
 Der Aufbau des Graphen ist wie folgt:
 
-- Der Graph ist gerichtet, weil viele Straßen Einbahnstraßen sind.
+- Der Graph ist gerichtet, damit Einbahnstraßen abgebildet werden können. Normale Straßen bestehen aus zwei gegenläufigen Kanten, Einbahnstraßen nur aus einer.
 - Die Mehrfachkanten entstehen, wenn zwischen zwei Knoten mehrere Straßensegmente verlaufen.. 
 - Die Knoten tragen unter anderem Koordinaten (`x`/`y` als Länge/Breite) und `street_count`.
 - Die Kanten besitzen Attribute wie `length`, `highway`, `oneway`, `reversed` und `geometry`.
@@ -113,9 +114,9 @@ Mit `network_type="drive"` werden nur befahrbare Straßen geladen. Das passt zum
 
 Alle Verfahren folgen derselben Signatur `algo(G, start, dest) -> (path, expanded)`. Zurückgegeben werden der gefundene Weg als Knotenliste sowie die Reihenfolge der untersuchten Knoten, die für die Visualisierung benötigt wird. Der Weg wird über eine `parent`-Map rekonstruiert, die zu jedem Knoten seinen Vorgänger speichert.
 
-**Breitensuche (BFS).** Die BFS nutzt eine Queue nach dem FIFO-Prinzip und untersucht den Graphen schichtweise. Sie findet einen Weg mit möglichst wenigen Kanten. Da alle Kanten gleich behandelt werden, ist dieser Weg nicht zwingend der kürzeste gemessen an der Straßenlänge.
+**Breitensuche (BFS).** Die BFS nutzt eine Queue nach dem FIFO-Prinzip und untersucht den Graphen schichtweise. Sie findet einen Weg mit möglichst wenigen Kanten. Da alle Kanten gleich behandelt werden, ist dieser Weg nicht zwingend der kürzeste gemessen an der Straßenlänge. Führt etwa eine einzelne Kante von 10 km Länge zum Ziel und alternativ ein Weg aus zwei Kanten von je 100 m, wählt die Breitensuche die 10-km-Kante, weil sie nur einen Schritt statt zwei braucht.
 
-**Bidirektionale BFS.** Hier laufen zwei Suchen gleichzeitig: eine vorwärts vom Start und eine rückwärts vom Ziel. Sobald sich die beiden Suchfronten treffen, werden die Teilwege zu einem Gesamtweg zusammengesetzt. Dadurch muss in der Regel weniger expandiert werden als bei einer einseitigen Suche.
+**Bidirektionale BFS.** Hier laufen zwei Breitensuchen, die sich Ebene für Ebene abwechseln: eine vorwärts vom Start, eine rückwärts vom Ziel. Die Rückwärtssuche folgt den Kanten entgegen ihrer Richtung, also zu den Vorgängern eines Knotens, damit Einbahnstraßen korrekt berücksichtigt werden. Sobald eine der Suchen einen Knoten entdeckt, den die andere schon kennt, werden die beiden Teilwege zu einem Gesamtweg zusammengesetzt. Das ebenenweise Abwechseln ist wichtig. Die Breitensuche garantiert den kürzesten Weg nur, weil sie eine Ebene vollständig abarbeitet, bevor sie die nächste beginnt. Wechseln die Suchen dagegen nach jedem einzelnen Knoten, kann eine Seite auf einem Ast schon eine Ebene tiefer sein als auf einem anderen und die andere Suche über einen Umweg treffen, bevor der kürzere Treffpunkt geprüft wurde. Wechseln sie ebenenweise, haben alle Treffpunkte einer Ebene dieselbe Gesamtlänge, und schon der erste ist optimal.
 
 **Dijkstra.** Dijkstra nutzt eine Priority Queue und berücksichtigt die tatsächlichen Kantenkosten, hier die Straßenlänge. Jeder Knoten erhält die bisher bekannten Kosten `g(n)` vom Start; der jeweils günstigste Knoten wird als Nächstes expandiert. Damit ergibt sich der kürzeste Weg bezogen auf die Länge. *Status: geplant.*
 
@@ -133,11 +134,21 @@ TODO: für jeden Algorithmus
 
 Zum Vergleichen der verschiedenen Algorithmen wenden wir sie alle auf denselben Graphen des Hamburger Straßennetzes an und betrachten folgende Werte:
 
-- Anzahl der untersuchten Knoten je Verfahren
+- Anzahl der Kanten im Weg
+- Anzahl der expandierten Knoten
 - benötigte Laufzeit
-- Länge des gefundenen Weges
+- Länge des gefundenen Weges in km
 - Auswirkung der Luftlinien-Heuristik bei A\*
 - Verhalten einer bewusst überschätzenden Heuristik (schneller, aber ggf. längerer Weg)
+
+### Ergebnisse (HAW → Elbphilharmonie)
+
+| Verfahren | Kanten im Weg | expandierte Knoten | Laufzeit (ms) | Länge (km) |
+|---|---|---|---|---|
+| BFS | 30 | 1903 | 0,5 | 3,95 |
+| Bidirektionale BFS | 30 | 567 | 0,1 | 3,95 |
+| Dijkstra | | | | |
+| A\* | | | | |
 
 TODO: Aufbereitung
 - als Tabelle
