@@ -15,7 +15,6 @@ import heapq
 START = (53.5572099, 10.0232364)
 DEST = (53.5416732, 9.9839894)
 
-
 def construct_path(parent, start, dest):
     path = []
     node = dest
@@ -119,4 +118,46 @@ def dijkstra(G, start, dest):
     return None, expanded # kein Weg gefunden -> Expansionsreihenfolge zurückgeben
 
 def a_stern(G, start, dest):
-    return
+    # Koordinaten des Ziel-Knotens für die Heuristik (y = Breite, x = Länge)
+    dest_lat = G.nodes[dest]["y"]
+    dest_lon = G.nodes[dest]["x"]
+
+    # Heuristik: Luftlinie zum Ziel in Metern
+    # great_circle(lat, lon, lat, lon) -> Meter
+    def h(node):
+        return osmnx.distance.great_circle(
+            G.nodes[node]["y"], G.nodes[node]["x"], dest_lat, dest_lon
+        )
+
+    # Init
+    dist = {start: 0.0} # Dict: Zuordnung von erreichten Knoten und bisher bekannte günstigste Kosten vom Start zu jedem erreichten Knoten (Start->Start = 0) - g-Werte: bisher günstigste Kosten
+    parent = {} # Dict: Zuordnung von Knoten zu seinem parent
+    expanded = [] # Liste: expandierte Knoten
+    heap = [(h(start), 0.0, start)] # prio queue (Min-Heap) mit (Kosten/Prio: f = g + h, bisherige Kosten vom Start = g, Startknoten)
+
+    while heap: # solange queue noch Knoten beinhaltet
+        _f, cost, node = heapq.heappop(heap) # Knoten mit den kleinsten Gesamtkosten (kleinstes f) entnehmen (= höchste Priorität)
+        # heappop gibt immer das kleinste Tupel zurück, Tupel werden von links verglichen (zuerst f, bei Gleichstand g, dann node) -> deshalb kommt der Knoten mit dem kleinsten f zuerst raus 
+
+        # es ist bereits ein günstigerer Weg zu diesem Knoten bekannt (laut cost bzw. g, nicht Gesamtkosten f) -> skip
+        if cost > dist.get(node, float("inf")):
+            continue
+
+        expanded.append(node) # Knoten als expandiert markieren
+
+        # falls Ziel erreicht
+        if node == dest:
+            return construct_path(parent, start, dest), expanded # Weg rekonstruieren & zsm mit Expansionsreihenfolge zurückgeben
+
+        # ausgehende Kanten des aktuellen Knoten durchlaufen
+        for neighbour in G.successors(node):
+            weight = min(edge["length"] for edge in G[node][neighbour].values()) # kürzeste der parallelen Kanten nehmen
+            new_cost = cost + weight # vorläufige Kosten zum Nachbarn über den aktuellen Knoten
+
+            # falls neuer Weg kürzer als bisher bekannter Weg
+            if new_cost < dist.get(neighbour, float("inf")):
+                dist[neighbour] = new_cost # für den Nachbarknoten die günstigsten Kosten vom Start speichern
+                parent[neighbour] = node # aktueller Knoten als parent des Nachbarn merken
+                heapq.heappush(heap, (new_cost + h(neighbour), new_cost, neighbour)) # für Nachbarn wurde günstigerer Weg gefunden -> mit neuem Wert in queue/heap legen
+
+    return None, expanded # kein Weg gefunden -> Expansionsreihenfolge zurückgeben
