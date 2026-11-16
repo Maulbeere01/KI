@@ -236,6 +236,20 @@ Erzeugt aus path und expanded die animierte Karte, welche den Suchverlauf und de
         - Kanten ihrer Nachfolger ACTIVE
     2. Pfadphase: Karte leeren, Weg schrittweise weiß nachzeichnen
 
+### metrics.py
+Messskript für den Algorithmen-Vergleich. Verwendet um die Werte für die Auswertung zu erhalten.
+
+
+#### path_length(Graph, path)
+Summiert die Straßenlänge des Weges (nimmt je Knotenpaar die kürzeste parallele Kante) und liefert die Pfadlänge in km.
+
+#### measure(Graph, start, dest, algo)
+Führt den angegebenen Algorithmus einmal aus (für Kantenanzahl und expanded), misst dann die Laufzeit über `RUNS = 50` Durchläufe mit `time.perf_counter()` und mittelt sie.
+
+#### main
+Lädt den Graphen, mappt START & DEST auf Knoten und gibt pro Verfahren eine Zeile aus:
+algorithm, edges, expanded, ms, km
+für die Tabelle.
 
 ## Quellen
 
