@@ -125,8 +125,11 @@ if __name__ == "__main__":
     # anim.save("bi_dir_bfs.gif", writer="pillow", fps=20)
     
     # Dijkstra
-    path, expanded = dijkstra(G, start, dest)
-    anim = animate_search(G, path, expanded)
-    anim.save("dijkstra.gif", writer="pillow", fps=20)
+    # path, expanded = dijkstra(G, start, dest)
+    # anim = animate_search(G, path, expanded)
+    # anim.save("dijkstra.gif", writer="pillow", fps=20)
     
     # A*
+    path, expanded = a_stern(G, start, dest)
+    anim = animate_search(G, path, expanded)
+    anim.save("a_stern.gif", writer="pillow", fps=20)
