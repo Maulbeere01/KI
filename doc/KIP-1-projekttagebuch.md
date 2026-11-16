@@ -143,14 +143,21 @@ Zum Vergleichen der verschiedenen Algorithmen wenden wir sie alle auf denselben 
 
 | Verfahren | Kanten im Weg | expandierte Knoten | Laufzeit (ms) | Länge (km) |
 |---|---|---|---|---|
-| BFS | 30 | 1903 | 0,5 | 3,95 |
-| Bidirektionale BFS | 30 | 567 | 0,1 | 3,95 |
-| Dijkstra | 35 | 1936 | 5.31 | 3.46 |
-| A\* | | | | |
+| BFS | 30 | 1903 | 0,82 | 3,95 |
+| Bidirektionale BFS | 30 | 567 | 0,21 | 3,95 |
+| Dijkstra | 35 | 1936 | 8,65 | 3,46 |
+| A\* | 35 | 151 | 1,22 | 3,46 |
 
-TODO: Aufbereitung
-- als Tabelle
-- als animierte Karte (per visualize.py)
+### Interpretation
+
+- **BFS vs. Dijkstra/A\*:** BFS findet den Weg mit den wenigsten Kanten (30), aber ist mit 3,95 km länger als Dijkstra/A\* (35 Kanten, 3,46 km). BFS optimiert also die Kantenanzahl, nicht die Straßenlänge - den kürzesten Weg nach Distanz liefern Dijkstra und A\*.
+- **Bidirektionale BFS:** Gleiche Route wie BFS (30 Kanten, 3,95 km), aber nur 567 statt 1903 expandierte Knoten (ca. 70 % weniger) und dadurch etwa 4x schneller. Der Gewinn liegt in der geringeren Expansion, nicht in einer besseren Route.
+- **Dijkstra vs. A\*:** Beide liefern exakt dieselbe optimale Route (35 Kanten, 3,46 km). A\* expandiert jedoch nur 151 statt 1936 Knoten (ca. 92 % weniger) und ist etwa 7x schneller – die zulässige Luftlinien-Heuristik macht die Suche zielgerichteter, ohne dass sie an Optimalität verliert.
+- **Laufzeiten:** BFS und Dijkstra expandieren ähnlich viele Knoten (1903 vs. 1936), doch Dijkstra ist deutlich langsamer (8,65 ms statt 0,82 ms), weil die Priority Queue pro Zugriff teurer ist (logarithmisch) als die FIFO-Queue der BFS. A\* profitiert doppelt: weniger Expansionen und zielgerichtete Reihenfolge.
+
+### Einschränkung
+
+Ausgewertet wurde nur eine Start-/Ziel-Kombination. Die absoluten Laufzeiten hängen von Rechner und Auslastung ab, alle hier aufgelisteten Tests wurden allerdings an einer Maschine durchgeführt wodurch der relative Vergleich möglich ist. Für allgemeinere Aussagen wären mehrere Strecken und Wiederholungen nötig.
 
 
 ## 9. Herausforderungen
