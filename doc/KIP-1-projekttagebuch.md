@@ -139,7 +139,7 @@ Zum Vergleichen der verschiedenen Algorithmen wenden wir sie alle auf denselben 
 - Auswirkung der Luftlinien-Heuristik bei A\*
 - Verhalten einer bewusst überschätzenden Heuristik (schneller, aber ggf. längerer Weg)
 
-### Ergebnisse (HAW → Elbphilharmonie)
+### Ergebnisse (HAW -> Elbphilharmonie)
 
 | Verfahren | Kanten im Weg | expandierte Knoten | Laufzeit (ms) | Länge (km) |
 |---|---|---|---|---|

@@ -19,15 +19,15 @@ PATH_EDGES_PER_FRAME = 2
 HOLD_FRAMES = 40
 FIGSIZE = (8, 8)
 
-BG = "#0F1126"
+BG = "#111114"
 
 # edge states
 UNVISITED, VISITED, ACTIVE, PATH = 0, 1, 2, 3
 # style of edges: (color, alpha, linewidth)
 STYLE = {
-    UNVISITED: ("#2432B0", 0.3, 0.5),
-    VISITED: ("#2432B0", 1.0, 1.0),
-    ACTIVE: ("#3F50E7", 1.0, 1.0),
+    UNVISITED: ("#8F33A5", 0.3, 0.5),
+    VISITED: ("#8F33A5", 1.0, 1.0),
+    ACTIVE: ("#AF379C", 1.0, 1.0),
     PATH: ("#FFFFFF", 1.0, 1.0),
 }
 RGBA = np.array([to_rgba(c, a) for c, a, _ in STYLE.values()])
