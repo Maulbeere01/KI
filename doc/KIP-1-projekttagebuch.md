@@ -155,9 +155,12 @@ Zum Vergleichen der verschiedenen Algorithmen wenden wir sie alle auf denselben 
 - **Dijkstra vs. A\*:** Beide liefern exakt dieselbe optimale Route (35 Kanten, 3,46 km). A\* expandiert jedoch nur 151 statt 1936 Knoten (ca. 92 % weniger) und ist etwa 7x schneller – die zulässige Luftlinien-Heuristik macht die Suche zielgerichteter, ohne dass sie an Optimalität verliert.
 - **Laufzeiten:** BFS und Dijkstra expandieren ähnlich viele Knoten (1903 vs. 1936), doch Dijkstra ist deutlich langsamer (8,65 ms statt 0,82 ms), weil die Priority Queue pro Zugriff teurer ist (logarithmisch) als die FIFO-Queue der BFS. A\* profitiert doppelt: weniger Expansionen und zielgerichtete Reihenfolge.
 
+### Bezug zur Zeitkomplexität
+BFS und bidirektionale BFS laufen in O(V+E), da sie nur eine FIFO-Queue nutzen. Dijkstra und A\* benötigen durch die Priority Queue im Worst Case O((V+E) log V). Deshalb ist Dijkstra trotz fast gleicher Expansion (1936 vs. 1903 Knoten) langsamer als die BFS. Der Unterschied liegt im logarithmischen Heap-Zugriff, nicht in der Anzahl der Knoten. A\* teilt zwar die Worst-Case-Klasse mit Dijkstra, profitiert aber durch die Heuristik in der Praxis (151 statt 1936 expandierte Knoten).
+
 ### Einschränkung
 
-Ausgewertet wurde nur eine Start-/Ziel-Kombination. Die absoluten Laufzeiten hängen von Rechner und Auslastung ab, alle hier aufgelisteten Tests wurden allerdings an einer Maschine durchgeführt wodurch der relative Vergleich möglich ist. Für allgemeinere Aussagen wären mehrere Strecken und Wiederholungen nötig.
+Ausgewertet wurde nur eine Start-/Ziel-Kombination, diese wird allerdings für jeden Algorithmus 50x durchgeführt. Die absoluten Laufzeiten hängen von Rechner und Auslastung ab, alle hier aufgelisteten Tests wurden allerdings an einer Maschine durchgeführt wodurch der relative Vergleich möglich ist. Für allgemeinere Aussagen wären mehrere Strecken und Wiederholungen nötig.
 
 
 ## 9. Herausforderungen
