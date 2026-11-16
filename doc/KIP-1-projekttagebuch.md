@@ -146,7 +146,7 @@ Zum Vergleichen der verschiedenen Algorithmen wenden wir sie alle auf denselben 
 |---|---|---|---|---|
 | BFS | 30 | 1903 | 0,5 | 3,95 |
 | Bidirektionale BFS | 30 | 567 | 0,1 | 3,95 |
-| Dijkstra | | | | |
+| Dijkstra | 35 | 1936 | 5.31 | 3.46 |
 | A\* | | | | |
 
 TODO: Aufbereitung

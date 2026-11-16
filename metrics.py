@@ -2,12 +2,12 @@ import time
 
 import osmnx
 
-from algorithms import DEST, START, bfs, bi_dir_bfs
+from algorithms import DEST, START, bfs, bi_dir_bfs, dijkstra
 
 ALGORITHMS = [
     ("BFS", bfs),
     ("Bidirectional BFS", bi_dir_bfs),
-    # ("Dijkstra", dijkstra),
+    ("Dijkstra", dijkstra),
     # ("A*", astar),
 ]
 
