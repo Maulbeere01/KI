@@ -11,7 +11,7 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.collections import LineCollection
 from matplotlib.colors import to_rgba
 
-from algorithms import DEST, START, bfs, bi_dir_bfs
+from algorithms import DEST, START, bfs, bi_dir_bfs, dijkstra, a_stern
 
 # animation settings
 NODES_PER_FRAME = 20
@@ -114,10 +114,19 @@ if __name__ == "__main__":
     start = osmnx.distance.nearest_nodes(G, START[1], START[0])
     dest = osmnx.distance.nearest_nodes(G, DEST[1], DEST[0])
 
+    # BFS
     # path, expanded = bfs(G, start, dest)
     # anim = animate_search(G, path, expanded)
     # anim.save("bfs.gif", writer="pillow", fps=20)  # pillow for gif, ffmpeg for mp4
 
-    path, expanded = bi_dir_bfs(G, start, dest)
+    # bidir BFS
+    # path, expanded = bi_dir_bfs(G, start, dest)
+    # anim = animate_search(G, path, expanded)
+    # anim.save("bi_dir_bfs.gif", writer="pillow", fps=20)
+    
+    # Dijkstra
+    path, expanded = dijkstra(G, start, dest)
     anim = animate_search(G, path, expanded)
-    anim.save("bi_dir_bfs.gif", writer="pillow", fps=20)
+    anim.save("dijkstra.gif", writer="pillow", fps=20)
+    
+    # A*

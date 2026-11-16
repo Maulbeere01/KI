@@ -10,6 +10,7 @@ expanded: list of node IDs in the order they were expanded
 
 from collections import deque
 import osmnx
+import heapq
 
 START = (53.5572099, 10.0232364)
 DEST = (53.5416732, 9.9839894)
@@ -84,3 +85,38 @@ def expand_level(neighbours, q, parent, visited_own, visited_other, expanded):
                 parent[n] = node
     return None
 
+def dijkstra(G, start, dest):
+    # Init
+    dist = {start: 0.0} # Dict: Zuordnung von erreichten Knoten und bisher bekannte günstigste Kosten vom Start zu jedem erreichten Knoten (Start->Start = 0)
+    parent = {} # Dict: Zuordnung von Knoten zu seinem parent
+    expanded = [] # Liste: expandierte Knoten
+    heap = [(0.0, start)] # prio queue (Min-Heap) mit (Kosten, Startknoten)
+
+    while heap: # solange queue noch Knoten beinhaltet
+        cost, node = heapq.heappop(heap) # Knoten mit den kleinsten Kosten entnehmen (= höchste Priorität) 
+
+        # es ist bereits ein günstigerer Weg zu diesem Knoten bekannt -> skip
+        if cost > dist.get(node, float("inf")):
+            continue
+
+        expanded.append(node) # Knoten als expandiert markieren
+
+        # falls Ziel erreicht
+        if node == dest:
+            return construct_path(parent, start, dest), expanded # Weg rekonstruieren & zsm mit Expansionsreihenfolge zurückgeben
+
+        # ausgehende Kanten des aktuellen Knoten durchlaufen
+        for neighbour in G.successors(node):
+            weight = min(edge["length"] for edge in G[node][neighbour].values()) # kürzeste der parallelen Kanten nehmen
+            new_cost = cost + weight # vorläufige Kosten zum Nachbarn über den aktuellen Knoten
+
+            # falls neuer Weg kürzer als bisher bekannter Weg
+            if new_cost < dist.get(neighbour, float("inf")):
+                dist[neighbour] = new_cost # für den Nachbarknoten die günstigsten Kosten vom Start speichern
+                parent[neighbour] = node # aktueller Knoten als parent des Nachbarn merken
+                heapq.heappush(heap, (new_cost, neighbour)) # für Nachbarn wurde günstigerer Weg gefunden -> mit neuem Wert in queue/heap legen
+
+    return None, expanded # kein Weg gefunden -> Expansionsreihenfolge zurückgeben
+
+def a_stern(G, start, dest):
+    return
