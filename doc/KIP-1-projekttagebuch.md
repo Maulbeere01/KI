@@ -6,6 +6,7 @@
 - **Beispielstrecke:** HAW Hamburg zur Elbphilharmonie
 - **Werkzeuge:** Python, osmnx (OpenStreetMap), matplotlib, NumPy
 - **Abgabe:** 18.11.2026
+- **Repository:** https://github.com/Maulbeere01/KI
 
 ## Aufbau
 1. Idee
