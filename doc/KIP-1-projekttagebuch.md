@@ -1,10 +1,11 @@
-# KIP-1 – Projekttagebuch
+# KIP-1 Projekttagebuch
 
 - **Titel:** Routenplaner durch Hamburg
-- **Ziel:** Kürzeste Wege zwischen zwei Knoten in einem echten Straßennetz finden und verschiedene Suchverfahren vergleichen.
+- **Ziel:** Wege zwischen zwei Punkten in einem echten Straßennetz finden und vergleichen welche Suchverfahren den kürzesten Weg liefern und welcher Aufwand damit verbunden ist.
 - **Verfahren:** Breitensuche (BFS), bidirektionale BFS, Dijkstra, A*
 - **Beispielstrecke:** HAW Hamburg zur Elbphilharmonie
-- **Werkzeuge:** Python, osmnx (OpenStreetMap), matplotlib, NumPy
+- **Werkzeuge:** Python, osmnx (OpenStreetMap), matplotlib
+- **Team:** Ben Wehrberger (BFS, bidirektionale BFS, Visualisierung, Messskript), Raffael Apitz (Dijkstra, A*, Präsentation)
 - **Abgabe:** 18.11.2026
 - **Repository:** https://github.com/Maulbeere01/KI
 
@@ -39,9 +40,9 @@ Die Ergebnisse werden als Animation auf der Karte in Form eines GIF dargestellt.
 
 Das Projekt wurde schrittweise angegangen.
 1. Projekt-Setup und erste Untersuchung: Projektumgebung, Karte heruntergeladen, Graph inspiziert
-2. Visualisierung vorbereiten: KI-unterstützte Python-Funktionen zur Visualisierung der Algorithmen erstellt
-3. Vorbereitung: einlesen in Algorithmen, notieren der Abläufe, Vorgehen und Verteilung planen
-4. Erster Algorithmus: BFS implementiert
+2. Vorbereitung: einlesen in Algorithmen, notieren der Abläufe, Vorgehen und Verteilung planen
+3. Erster Algorithmus: BFS implementiert
+4. Visualisierung vorbereiten: KI-unterstützte Python-Funktionen zur Visualisierung der Algorithmen erstellt
 5. Visualisierung: BFS-Suche animiert dargestellt, Export als GIF
 6. Weitere Algorithmen umgesetzt und visualisiert
 7. Doku fortlaufend angepasst
@@ -50,7 +51,7 @@ Das Projekt wurde schrittweise angegangen.
 
 ## 3. Setup & Starthilfe
 
-Die Umgebung wird über eine virtuelle Python-Umgebung und `requirements.txt` eingerichtet. Die Karte wird einmalig mit `downloadMap.py` als `data/hamburg.graphml` gespeichert und danach von den übrigen Skripten geladen.
+Die benötigten Pakete stehen in `requirements.txt`. Die Karte liegt als `data/hamburg.graphml` im Repository und wird von allen Skripten geladen. `downloadMap.py` zeigt, wie sie erzeugt wurde.
 
 ### Setup
 ```bash
@@ -61,10 +62,13 @@ Die Umgebung wird über eine virtuelle Python-Umgebung und `requirements.txt` ei
 
 ### Starthilfe
 ```bash
-    # Karte herunterladen -> data/hamburg.graphml
+    # Karte herunterladen -> data/hamburg.graphml (optional, liegt bereits im Repository)
     python downloadMap.py
 
-    # Suche laufen lassen + Animation erzeugen -> z.B. bfs.gif
+    # Metriken ausgeben lassen
+    python metrics.py
+
+    # Suchen laufen lassen + Animationen erzeugen
     python visualize.py
 ```
 
@@ -72,15 +76,13 @@ Die Umgebung wird über eine virtuelle Python-Umgebung und `requirements.txt` ei
 ## 4. Genutzte Techniken
 
 - **osmnx:** Laden, Speichern und Durchlaufen des OpenStreetMap-Straßennetzes.
-- **matplotlib:** Darstellung der Karte über `LineCollection` und Animation über `FuncAnimation`.
-- **NumPy:** Effiziente Verwaltung der Kantenzustände während der Animation.
-- **Pillow:** Export der Animation als GIF.
-- **Virtuelle Umgebung und Pyright:** Reproduzierbares Setup und statische Typprüfung im Editor.
+- **matplotlib:** Darstellung der Karte und Animation der Suche.
+- **deque:** Queue (FIFO) für die Breitensuche und die bidirektionale Breitensuche.
+- **heapq:** Priority Queue für Dijkstra und A\*.
 
 Der visuelle Stil der Animation wurde an ein öffentliches Beispielprojekt angelehnt (siehe Quellen; MIT-Lizenz).
 
-Zur Erstellung von `visualize.py`, um die Pfadsuche zu visualisieren, wurde KI verwendet. 
-
+Zur Erstellung von `visualize.py` wurde KI verwendet, der Code wurde anschließend überprüft und vereinfacht.
 
 ## 5. Graph-Modellierung aus OpenStreetMap
 
@@ -93,7 +95,7 @@ Das Straßennetz wird mit osmnx über `graph_from_point` geladen und als `MultiD
 Der Aufbau des Graphen ist wie folgt:
 
 - Der Graph ist gerichtet, damit Einbahnstraßen abgebildet werden können. Normale Straßen bestehen aus zwei gegenläufigen Kanten, Einbahnstraßen nur aus einer.
-- Die Mehrfachkanten entstehen, wenn zwischen zwei Knoten mehrere Straßensegmente verlaufen.
+- Mehrfachkanten können vorkommen, wenn zwischen zwei Knoten mehrere parallele Straßen in derselben Richtung verlaufen.
 - Die Knoten tragen unter anderem Koordinaten (`x`/`y` als Länge/Breite) und `street_count`.
 - Die Kanten besitzen Attribute wie `length`, `highway`, `oneway`, `reversed` und `geometry`.
 - Die Geometrie beschreibt den tatsächlichen Straßenverlauf, der für die Darstellung genutzt wird.
@@ -111,11 +113,11 @@ Mit `network_type="drive"` werden nur befahrbare Straßen geladen. Das passt zum
 
 ## 7. Genutzte Algorithmen
 
-Alle Verfahren folgen derselben Signatur `algo(G, start, dest) -> (path, expanded)`. Zurückgegeben werden der gefundene Weg als Knotenliste sowie die Reihenfolge der untersuchten Knoten, die für die Visualisierung benötigt wird. Der Weg wird über eine `parent`-Map rekonstruiert, die zu jedem Knoten seinen Vorgänger speichert.
+Alle Verfahren folgen derselben Signatur `algo(G, start, dest) -> (path, expanded)`. Zurückgegeben werden der gefundene Weg als Knotenliste sowie die Reihenfolge der expandierten Knoten, die für die Visualisierung benötigt wird. Der Weg wird über eine `parent`-Map rekonstruiert, die zu jedem Knoten seinen Vorgänger speichert.
 
-**Breitensuche (BFS).** Die BFS nutzt eine Queue nach dem FIFO-Prinzip und untersucht den Graphen schichtweise. Sie findet einen Weg mit möglichst wenigen Kanten. Da alle Kanten gleich behandelt werden, ist dieser Weg nicht zwingend der kürzeste gemessen an der Straßenlänge. Führt etwa eine einzelne Kante von 10 km Länge zum Ziel und alternativ ein Weg aus zwei Kanten von je 100 m, wählt die Breitensuche die 10-km-Kante, weil sie nur einen Schritt statt zwei braucht.
+**Breitensuche (BFS).** Die BFS nutzt eine Queue nach dem FIFO-Prinzip und untersucht den Graphen ebenenweise. Sie findet den Weg mit den wenigsten Kanten. Da alle Kanten gleich behandelt werden, ist dieser Weg nicht zwingend der kürzeste gemessen an der Straßenlänge. Führt etwa eine einzelne Kante von 10 km Länge zum Ziel und alternativ ein Weg aus zwei Kanten von je 100 m, wählt die Breitensuche die 10-km-Kante, weil sie nur einen Schritt statt zwei braucht.
 
-**Bidirektionale BFS.** Hier laufen zwei Breitensuchen, die sich Ebene für Ebene abwechseln: eine vorwärts vom Start, eine rückwärts vom Ziel. Die Rückwärtssuche folgt den Kanten entgegen ihrer Richtung, also zu den Vorgängern eines Knotens, damit Einbahnstraßen korrekt berücksichtigt werden. Sobald eine der Suchen einen Knoten entdeckt, den die andere schon kennt, werden die beiden Teilwege zu einem Gesamtweg zusammengesetzt. Das ebenenweise Abwechseln ist wichtig. Die Breitensuche garantiert den kürzesten Weg nur, weil sie eine Ebene vollständig abarbeitet, bevor sie die nächste beginnt. Wechseln die Suchen dagegen nach jedem einzelnen Knoten, kann eine Seite auf einem Ast schon eine Ebene tiefer sein als auf einem anderen und die andere Suche über einen Umweg treffen, bevor der kürzere Treffpunkt geprüft wurde. Wechseln sie ebenenweise, haben alle Treffpunkte einer Ebene dieselbe Gesamtlänge, und schon der erste ist optimal.
+**Bidirektionale BFS.** Hier laufen zwei Breitensuchen, die sich Ebene für Ebene abwechseln: eine vorwärts vom Start, eine rückwärts vom Ziel. Die Rückwärtssuche folgt den Kanten entgegen ihrer Richtung, also zu den Vorgängern eines Knotens, damit Einbahnstraßen korrekt berücksichtigt werden. Sobald eine der Suchen einen Knoten entdeckt, den die andere schon kennt, werden die beiden Teilwege zu einem Gesamtweg zusammengesetzt. Das ebenenweise Abwechseln ist wichtig. Die Breitensuche garantiert den Weg mit den wenigsten Kanten nur, weil sie eine Ebene vollständig abarbeitet, bevor sie die nächste beginnt. Wechseln die Suchen dagegen nach jedem einzelnen Knoten, kann eine Seite auf einem Ast schon eine Ebene tiefer sein als auf einem anderen und die andere Suche über einen Umweg treffen, bevor der kürzere Treffpunkt geprüft wurde. Wechseln sie ebenenweise, haben alle Treffpunkte einer Ebene dieselbe Gesamtlänge, und schon der erste ist optimal.
 
 **Dijkstra.** Dijkstra nutzt eine Priority Queue, die Knoten nach ihren bisher bekannten Kosten `g(n)` sortiert. Der Startknoten beginnt mit Kosten 0, alle anderen Knoten werden mit Kosten unendlich initialisiert. In jedem Schritt wird der Knoten mit den geringsten Kosten entnommen und bearbeitet, danach werden die Kosten seiner Nachbarn angepasst (falls der Weg über den aktuellen Knoten günstiger ist). Als Kantenkosten dient hier die Straßenlänge `length`. Da alle Kanten nur positive Kosten haben, ist der beim Erreichen des Ziels gefundene Weg der kürzeste bezogen auf die Straßenlänge. Im Unterschied zur BFS berücksichtigt Dijkstra also die tatsächlichen Kantengewichte und nicht nur die Anzahl der Kanten.
 
@@ -123,10 +125,10 @@ Alle Verfahren folgen derselben Signatur `algo(G, start, dest) -> (path, expande
 
 | Verfahren | Stärken | Schwächen | Speicherbedarf | Zeitkomplexität (worst case) | Voraussetzungen |
 |---|---|---|---|---|---|
-| BFS | einfach, optimal bei ungewichteten Graphen (finden Weg mit wenigsten Kanten), vollständig bei endlichem Graphen | ignoriert Kantengewichte -> findet nicht zwingend den kürzesten Straßenweg, expandiert breit in alle Richtungen | O(V) (ca. 1 Eintrag pro Knoten -> Queue (zu untersuchen), visited (gesehen), parent-Map (Weg zurück)) | $O(V+E)$ | ungewichtete/gleich gewichtete Kanten, Durchlauf nur vorwärts über successors, Weg von Start bis Ziel muss existieren |
-| Bidirektionale BFS | weniger expandierte Knoten als einseitige BFS, findet bei ebenenweisem Wechsel zwischen beiden Seiten weiterhin Weg mit minimaler Kantenzahl | höherer Implementierungsaufwand, ignoriert Gewichte wie BFS, korrekte Abbruchbedingung nötig | O(V) (max. 2 Einträge pro Knoten -> je eine Queue (zu untersuchen), visited (gesehen), parent-Map (Vorwärts- und Rückwärtssuche)) | $ O(V+E) $ | Zugriff auf Vorgänger (gerichtete Kanten), ebenenweiser Wechsel zwischen beiden Seiten, beide Suchen können sich erreichen |
-| Dijkstra | optimal bei nicht-negativen Gewichten, berücksichtigt Gewichte bzw. Straßenlänge | expandiert in alle Richtungen und damit viele Knoten, bei ungewichteten Graphen langsamer als BFS | O(V) (ca. 1 Eintrag pro Knoten -> Distanzen (bisherige Kosten), parent-Map (Weg zurück), Priority Queue (offene Knoten)) | $O((V+E) logV)$ | nicht-negative Kantengewichte, erreichbares Ziel |
-| A\* | zielgerichtet - bevorzugt durch Heuristik bei Auswahl des nächsten Knotens diejenigen die dem Ziel näher sind, meist deutlich weniger Expansionen als Dijkstra, optimal bei zulässiger Heuristik | Qualität hängt stark von der Heuristik ab (schwache Heuristik ca. gleich Dijkstra) | O(V) (ca. 1 Eintrag pro Knoten -> Distanzen (Kosten), parent-Map (Weg zurück), offene Menge (entdeckte, noch nicht untersuchte Knoten), geschlossene Menge (vollständig expandierte Knoten)) | $O((V+E) logV)$ | zulässige (für Effizienz konsistente) Heuristik, nicht-negative Kantengewichte |
+| BFS | einfach, optimal bei ungewichteten Graphen (finden Weg mit wenigsten Kanten), vollständig bei endlichem Graphen | ignoriert Kantengewichte -> findet nicht zwingend den kürzesten Straßenweg, expandiert breit in alle Richtungen | O(V) (ca. 1 Eintrag pro Knoten -> Queue (zu untersuchen), visited (gesehen), parent-Map (Weg zurück)) | $O(V+E)$ | keine, das Ziel muss nur erkannt werden, wenn es gefunden wird|
+| Bidirektionale BFS | weniger expandierte Knoten als einseitige BFS, findet bei ebenenweisem Wechsel zwischen beiden Seiten weiterhin Weg mit minimaler Kantenzahl | höherer Implementierungsaufwand, ignoriert Gewichte wie BFS, korrekte Abbruchbedingung nötig | O(V) (ca. 1 Eintrag pro Knoten -> je eine Queue, ein visited-Set und eine parent-Map pro Suchrichtung, die sich nicht überschneiden) | $ O(V+E) $ | Ziel muss vorher bekannt sein, Zugriff auf Vorgänger (gerichtete Kanten), ebenenweiser Wechsel zwischen beiden Seiten |
+| Dijkstra | optimal bei nicht-negativen Gewichten, berücksichtigt Gewichte bzw. Straßenlänge | expandiert in alle Richtungen und damit viele Knoten, bei ungewichteten Graphen langsamer als BFS | O(V + E) (Distanzen und parent-Map je ca. 1 Eintrag pro Knoten, die Priority Queue kann einen Knoten mehrfach enthalten, im schlimmsten Fall einmal pro Kante) | $O((V+E) logV)$ | nicht-negative Kantengewichte |
+| A\* | zielgerichtet - bevorzugt durch Heuristik bei Auswahl des nächsten Knotens diejenigen die dem Ziel näher sind, meist deutlich weniger Expansionen als Dijkstra, optimal bei zulässiger Heuristik | Qualität hängt stark von der Heuristik ab (schwache Heuristik ca. gleich Dijkstra) | O(V + E) (Distanzen und parent-Map je ca. 1 Eintrag pro Knoten, die Priority Queue kann einen Knoten mehrfach enthalten, im schlimmsten Fall einmal pro Kante) | $O((V+E) logV)$ | zulässige (für Effizienz konsistente) Heuristik, nicht-negative Kantengewichte |
 
 
 ## 8. Vergleich der Ergebnisse
@@ -137,8 +139,7 @@ Zum Vergleichen der verschiedenen Algorithmen wenden wir sie alle auf denselben 
 - Anzahl der expandierten Knoten
 - benötigte Laufzeit
 - Länge des gefundenen Weges in km
-- Auswirkung der Luftlinien-Heuristik bei A\*
-- Verhalten einer bewusst überschätzenden Heuristik (schneller, aber ggf. längerer Weg)
+- Auswirkung der Luftlinien-Heuristik bei A*
 
 ### Ergebnisse (HAW -> Elbphilharmonie)
 
@@ -151,23 +152,26 @@ Zum Vergleichen der verschiedenen Algorithmen wenden wir sie alle auf denselben 
 
 ### Interpretation
 
-- **BFS vs. Dijkstra/A\*:** BFS findet den Weg mit den wenigsten Kanten (30), aber ist mit 3,95 km länger als Dijkstra/A\* (35 Kanten, 3,46 km). BFS optimiert also die Kantenanzahl, nicht die Straßenlänge - den kürzesten Weg nach Distanz liefern Dijkstra und A\*.
-- **Bidirektionale BFS:** Gleiche Route wie BFS (30 Kanten, 3,95 km), aber nur 567 statt 1903 expandierte Knoten (ca. 70 % weniger) und dadurch etwa 4x schneller. Der Gewinn liegt in der geringeren Expansion, nicht in einer besseren Route.
-- **Dijkstra vs. A\*:** Beide liefern exakt dieselbe optimale Route (35 Kanten, 3,46 km). A\* expandiert jedoch nur 151 statt 1936 Knoten (ca. 92 % weniger) und ist etwa 7x schneller – die zulässige Luftlinien-Heuristik macht die Suche zielgerichteter, ohne dass sie an Optimalität verliert.
+- **BFS vs. Dijkstra/A\*:** BFS findet den Weg mit den wenigsten Kanten (30), aber ist mit 3,95 km länger als Dijkstra/A\* (35 Kanten, 3,46 km). BFS optimiert also die Kantenanzahl, nicht die Straßenlänge. Den kürzesten Weg nach Distanz liefern Dijkstra und A\*.
+- **Bidirektionale BFS:** Eine gleich lange Route wie BFS (30 Kanten, 3,95 km), aber nur 567 statt 1903 expandierte Knoten (ca. 70 % weniger) und dadurch etwa 4x schneller. Der Gewinn liegt in der geringeren Expansion, nicht in einer besseren Route.
+- **Bidirektionale BFS gegenüber der Vorlesung:** Für einen Suchbaum mit festem Verzweigungsfaktor v, in dem jede Ebene exponentiell wächst, sinkt der Aufwand laut Vorlesung von O(v^(t+1)) auf O(v^(t/2)). Das verspricht einen sehr großen Gewinn, aber gemessen wurde nur ein Faktor von ca. 3,4. Unser Straßennetz ist kein solcher Baum, sondern ein Graph mit Zyklen, in dem viele Wege zu schon bekannten Knoten zurückführen. Das durchsuchte Gebiet wächst daher eher wie eine Fläche, für die nur etwa Faktor 2 zu erwarten wäre.
+- **Dijkstra vs. A\*:** Beide liefern exakt dieselbe optimale Route (35 Kanten, 3,46 km). A\* expandiert jedoch nur 151 statt 1936 Knoten (ca. 92 % weniger) und ist etwa 7x schneller. Die zulässige Luftlinien-Heuristik macht die Suche zielgerichteter, ohne dass sie an Optimalität verliert.
 - **Laufzeiten:** BFS und Dijkstra expandieren ähnlich viele Knoten (1903 vs. 1936), doch Dijkstra ist deutlich langsamer (8,65 ms statt 0,82 ms), weil die Priority Queue pro Zugriff teurer ist (logarithmisch) als die FIFO-Queue der BFS. A\* profitiert doppelt: weniger Expansionen und zielgerichtete Reihenfolge.
 
 ### Bezug zur Zeitkomplexität
-BFS und bidirektionale BFS laufen in O(V+E), da sie nur eine FIFO-Queue nutzen. Dijkstra und A\* benötigen durch die Priority Queue im Worst Case O((V+E) log V). Deshalb ist Dijkstra trotz fast gleicher Expansion (1936 vs. 1903 Knoten) langsamer als die BFS. Der Unterschied liegt im logarithmischen Heap-Zugriff, nicht in der Anzahl der Knoten. A\* teilt zwar die Worst-Case-Klasse mit Dijkstra, profitiert aber durch die Heuristik in der Praxis (151 statt 1936 expandierte Knoten).
+BFS und bidirektionale BFS laufen in O(V+E), da sie nur eine FIFO-Queue nutzen, mit O(1) Operationen. Dijkstra und A\* benötigen durch die Priority Queue im Worst Case O((V+E) log V). Deshalb ist Dijkstra trotz fast gleicher Expansion (1936 vs. 1903 Knoten) langsamer als die BFS. Der Unterschied liegt im logarithmischen Heap-Zugriff, nicht in der Anzahl der Knoten. A\* teilt zwar die Worst-Case-Klasse mit Dijkstra, profitiert aber durch die Heuristik in der Praxis (151 statt 1936 expandierte Knoten).
 
 ### Einschränkung
 
-Ausgewertet wurde nur eine Start-/Ziel-Kombination, diese wird allerdings für jeden Algorithmus 50x durchgeführt. Die absoluten Laufzeiten hängen von Rechner und Auslastung ab, alle hier aufgelisteten Tests wurden allerdings an einer Maschine durchgeführt wodurch der relative Vergleich möglich ist. Für allgemeinere Aussagen wären mehrere Strecken und Wiederholungen nötig.
+Ausgewertet wurde nur eine Start-/Ziel-Kombination, diese wird allerdings für jeden Algorithmus 50x durchgeführt. Die absoluten Laufzeiten hängen von Rechner und Auslastung ab, alle hier aufgelisteten Tests wurden allerdings an einer Maschine durchgeführt wodurch der relative Vergleich möglich ist. Für allgemeinere Aussagen wären mehrere Strecken nötig.
 
 
 ## 9. Herausforderungen
 
-- **Overpass-API ausgelastet:** Der Kartendownload schlug zeitweise mit `502 Bad Gateway` fehl, da der öffentliche Overpass-Server an seiner Kapazitätsgrenze war. Das ist kein Fehler im Code; als Lösung dienen ein erneuter Versuch, ein anderer Endpunkt oder die bereits gespeicherte `.graphml`-Datei.
+- **Overpass-API ausgelastet:** Der Kartendownload schlug zeitweise mit `502 Bad Gateway` fehl, da der öffentliche Overpass-Server an seiner Kapazitätsgrenze war. Als Lösung dienen ein erneuter Versuch, ein anderer Endpunkt oder die bereits gespeicherte `.graphml`-Datei.
+- **Korrektheit der bidirektionalen BFS:** Wechseln die beiden Suchen nach jedem einzelnen Knoten statt nach jeder Ebene, ist der gefundene Weg in seltenen Fällen eine Kante zu lang. Dieser Fehler ist verbreitet, laut einem [Blogbeitrag](https://zdimension.fr/everyone-gets-bidirectional-bfs-wrong/) steckt er in vielen Online-Implementierungen.
 - **Richtung bei der Rückwärtssuche:** Die bidirektionale Suche muss rückwärts über Vorgänger laufen, sonst würden Einbahnstraßen falsch behandelt werden.
+- **Reihenfolge der Koordinaten:** Kartendienste geben Koordinaten als (Breite, Länge) an, osmnx erwartet `x` = Länge und `y` = Breite. Vertauscht man sie, liefert `nearest_nodes` ohne Fehlermeldung einen falschen Knoten.
 - **Größe/Performance der Animation:** Der GIF-Export ist groß und die Erzeugung dauert, das wurde über Parameter wie Knoten pro Frame und den Kartenradius ausbalanciert.
 
 
@@ -182,6 +186,7 @@ Aufbauend auf den Erkenntnissen sowie den Ergebnissen dieses Projekts wären fol
 
 Offene Fragen, die in dem Zusammenhang bleiben: 
 - Wie verhalten sich die Verfahren auf deutlich größeren Netzen bzw. anderen Städten?
+- Hängt der Gewinn der bidirektionalen Suche (hier Faktor 3,4) von der Struktur des Straßennetzes ab, etwa in Städten mit regelmäßigem Straßenraster?
 
 
 ## Quellen
@@ -191,3 +196,5 @@ Offene Fragen, die in dem Zusammenhang bleiben:
 - Visueller Stil der Animation, angelehnt an: https://github.com/felipearosr/Shortest_Path (MIT-Lizenz)
 - Dijkstra: https://www.geeksforgeeks.org/dsa/time-and-space-complexity-of-dijkstras-algorithm/
 - A*: https://www.datacamp.com/de/tutorial/a-star-algorithm
+- zdimension: Everyone gets bidirectional BFS wrong (2024): https://zdimension.fr/everyone-gets-bidirectional-bfs-wrong/
+- Vorlesungsfolien KI01 und KI02, Michaela Regneri, HAW Hamburg, WS 2026/27
