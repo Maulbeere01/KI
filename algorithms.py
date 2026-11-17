@@ -89,13 +89,13 @@ def dijkstra(G, start, dest):
     dist = {start: 0.0} # Dict: Zuordnung von erreichten Knoten und bisher bekannte günstigste Kosten vom Start zu jedem erreichten Knoten (Start->Start = 0)
     parent = {} # Dict: Zuordnung von Knoten zu seinem parent
     expanded = [] # Liste: expandierte Knoten
-    heap = [(0.0, start)] # prio queue (Min-Heap) mit (Kosten, Startknoten)
+    heap = [(0.0, start)] # prio queue (Min-Heap) mit (Kosten vom Start, Knoten)
 
     while heap: # solange queue noch Knoten beinhaltet
         cost, node = heapq.heappop(heap) # Knoten mit den kleinsten Kosten entnehmen (= höchste Priorität) 
 
         # es ist bereits ein günstigerer Weg zu diesem Knoten bekannt -> skip
-        if cost > dist.get(node, float("inf")):
+        if cost > dist.get(node, float("inf")): # holt Kosten vom Start für Knoten, falls nicht vorhanden - default inf
             continue
 
         expanded.append(node) # Knoten als expandiert markieren
@@ -133,14 +133,14 @@ def a_stern(G, start, dest):
     dist = {start: 0.0} # Dict: Zuordnung von erreichten Knoten und bisher bekannte günstigste Kosten vom Start zu jedem erreichten Knoten (Start->Start = 0) - g-Werte: bisher günstigste Kosten
     parent = {} # Dict: Zuordnung von Knoten zu seinem parent
     expanded = [] # Liste: expandierte Knoten
-    heap = [(h(start), 0.0, start)] # prio queue (Min-Heap) mit (Kosten/Prio: f = g + h, bisherige Kosten vom Start = g, Startknoten)
+    heap = [(h(start), 0.0, start)] # prio queue (Min-Heap) mit (Kosten/Prio: f = g + h, bisherige Kosten vom Start = g, Knoten)
 
     while heap: # solange queue noch Knoten beinhaltet
         _f, cost, node = heapq.heappop(heap) # Knoten mit den kleinsten Gesamtkosten (kleinstes f) entnehmen (= höchste Priorität)
         # heappop gibt immer das kleinste Tupel zurück, Tupel werden von links verglichen (zuerst f, bei Gleichstand g, dann node) -> deshalb kommt der Knoten mit dem kleinsten f zuerst raus 
 
         # es ist bereits ein günstigerer Weg zu diesem Knoten bekannt (laut cost bzw. g, nicht Gesamtkosten f) -> skip
-        if cost > dist.get(node, float("inf")):
+        if cost > dist.get(node, float("inf")):  # holt Kosten vom Start für Knoten, falls nicht vorhanden - default inf
             continue
 
         expanded.append(node) # Knoten als expandiert markieren
